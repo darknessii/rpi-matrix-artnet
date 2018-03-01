@@ -36,6 +36,7 @@ frameBufferCounter = 0
 rgbframeLength = 0
 # Wie viele Sequencen sollen im Buffer gespeichert werden
 seqBufferSize = 6 # Min 4 Buffer
+seqBufferOffset = 2
 lastSequence = 0
 
 frameArray = [[0, 0, 0, [0]]]
@@ -47,7 +48,7 @@ def rgbmatrix_options():
   options = RGBMatrixOptions()
   options.multiplexing = 5
   options.row_address_type = 0
-  options.brightness = 100
+  options.brightness = 80 
   options.rows = number_of_rows_per_panel
   options.cols = number_of_columns_per_panel
   options.chain_length = number_of_panels
@@ -55,11 +56,11 @@ def rgbmatrix_options():
   options.hardware_mapping = 'regular'
   options.inverse_colors = False
   options.led_rgb_sequence = "BGR"
-  options.gpio_slowdown = 4
-  options.pwm_lsb_nanoseconds = 130
-  options.show_refresh_rate = 0
+  options.gpio_slowdown = 1 
+  options.pwm_lsb_nanoseconds = 150
+  options.show_refresh_rate = 0 
   options.disable_hardware_pulsing = True
-  options.scan_mode = 1
+  options.scan_mode = 0 
   options.pwm_bits = 11
   options.daemon = 0
   options.drop_privileges = 0
@@ -99,7 +100,6 @@ class ArtNet(DatagramProtocol):
 #            frameArray = sorted(frameArray, key=lambda x: x[1])
             frameArray = sorted(frameArray,key=itemgetter(1))
             counter = 0
-#-TO DO            while(counter < (seqBufferSize * universum_count))
             bufferSize = seqBufferSize * universum_count
             while(counter < bufferSize):
                 if (counter < len(frameArray)):
@@ -129,7 +129,7 @@ class ArtNet(DatagramProtocol):
                 rgbdata = rawbytes[18:(rgb_length+18)]
                 self.addToFrameBufferArray(sequence,universe,rgb_length,rgbdata)
                 if(lastSequence != sequence):
-                    frameBuffer, rgbframeLength = self.getSequenceFromFrameBuffer(sequence - 2)
+                    frameBuffer, rgbframeLength = self.getSequenceFromFrameBuffer(sequence - seqBufferOffset)
                     self.showDisplay(display_size_x,display_size_y,frameBuffer,rgbframeLength)
                 lastSequence = sequence
 
