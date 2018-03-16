@@ -34,9 +34,8 @@ channel_per_univers = 510
 frameBuffer = None
 frameBufferCounter = 0
 rgbframeLength = 0
-# Wie viele Sequencen sollen im Buffer gespeichert werden
-seqBufferSize = 6 # Min 4 Buffer
-seqBufferOffset = 2
+# Wie viele Sequencen sollen im Buffer gespeichert werden min. 4
+seqBufferSize = 10
 lastSequence = 0
 
 frameArray = [[0, 0, 0, [0]]]
@@ -48,7 +47,7 @@ def rgbmatrix_options():
   options = RGBMatrixOptions()
   options.multiplexing = 5
   options.row_address_type = 0
-  options.brightness = 80 
+  options.brightness = 80
   options.rows = number_of_rows_per_panel
   options.cols = number_of_columns_per_panel
   options.chain_length = number_of_panels
@@ -73,6 +72,13 @@ display = RGBMatrix(options=options)
 class sACN_E1_31(DatagramProtocol):
 
 
+#    def __init__(self):
+#        self.frameBuffer = None
+
+#    def __str__(self):
+#        return ("sACN_E1-31 package:\n - op_code: {0}").format(self.frameBuffer)
+
+
     def addToFrameBufferArray(self, sequence, universe, rgb_length, data):
         global frameArray
         if (sequence > -1):
@@ -86,18 +92,16 @@ class sACN_E1_31(DatagramProtocol):
             else:
                 frameArray.append([sequence, universe, rgb_length, data])
 
-
 # Diese Funktion gibt eine gesamte Sequenz auch alle Universum in einem Array zusammengezogen
     def getSequenceFromFrameBuffer(self, sequenceNr):
         global frameArray
         finalFrameArray = []
         rgbframeLength = 0
-        #Sequence korrektur da es nur Sequenzen zwischen 1 und 255 geben darf
+        #Sequence korrektur da es nur Sequenzen zwischen 0 und 255 geben darf
         if (sequenceNr == -1 or sequenceNr == -2):
             sequenceNr = sequenceNr + 255
         if (sequenceNr > -1):
 # Sortieren des Array nach Sequence
-#            frameArray = sorted(frameArray, key=lambda x: x[1])
             frameArray = sorted(frameArray,key=itemgetter(1))
             counter = 0
             bufferSize = seqBufferSize * universum_count
@@ -120,10 +124,11 @@ class sACN_E1_31(DatagramProtocol):
                 sequence = rawbytes[111]
                 universe = rawbytes[114]
                 rgb_length = (rawbytes[115] << 8) + rawbytes[116]
+                rgb_length = 510
                 rgbdata = rawbytes[126:(rgb_length+126)]
                 self.addToFrameBufferArray(sequence,universe,rgb_length,rgbdata)
                 if(lastSequence != sequence):
-                    frameBuffer, rgbframeLength = self.getSequenceFromFrameBuffer(sequence - seqBufferOffset)
+                    frameBuffer, rgbframeLength = self.getSequenceFromFrameBuffer(sequence - 2)
                     self.showDisplay(display_size_x,display_size_y,frameBuffer,rgbframeLength)
                 lastSequence = sequence
 
@@ -143,7 +148,6 @@ class sACN_E1_31(DatagramProtocol):
              if (x > (display_size_x - 1)):
                  x = 0
                  y += 1
-
 
 reactor.listenUDP(5568, sACN_E1_31())
 reactor.run()
