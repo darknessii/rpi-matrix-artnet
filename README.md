@@ -54,19 +54,22 @@ sudo python rpi-matrix-artnet.py
 Jinx! – LED Matrix Control
 
 Jinx!, is a free available software for controlling LED matrices.
-http://www.live-leds.de/
+
+* http://www.live-leds.de/
 
 ## Glediator
 
 See the Glediator download page to download and install Glediator.
-http://www.solderlab.de/index.php/software/glediator
+
+* http://www.solderlab.de/index.php/software/glediator
 
 ## xLights
 
 xLights is a free and open source program that enables you to design, create
 and play amazing lighting displays through the use of DMX controllers,
 E1.31 Ethernet controllers and more.
-https://xlights.org/
+
+* https://xlights.org/
 
 
 
