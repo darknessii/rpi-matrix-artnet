@@ -35,7 +35,8 @@ frameBuffer = None
 frameBufferCounter = 0
 rgbframeLength = 0
 # Wie viele Sequencen sollen im Buffer gespeichert werden min. 4
-seqBufferSize = 10
+seqBufferSize = 6 # Buffer Min. 4
+seqBufferOffset = 2
 lastSequence = 0
 
 frameArray = [[0, 0, 0, [0]]]
@@ -97,7 +98,7 @@ class sACN_E1_31(DatagramProtocol):
         global frameArray
         finalFrameArray = []
         rgbframeLength = 0
-        #Sequence korrektur da es nur Sequenzen zwischen 0 und 255 geben darf
+        #Sequence korrektur da es nur Sequenzen zwischen 1 und 255 geben darf
         if (sequenceNr == -1 or sequenceNr == -2):
             sequenceNr = sequenceNr + 255
         if (sequenceNr > -1):
@@ -128,7 +129,7 @@ class sACN_E1_31(DatagramProtocol):
                 rgbdata = rawbytes[126:(rgb_length+126)]
                 self.addToFrameBufferArray(sequence,universe,rgb_length,rgbdata)
                 if(lastSequence != sequence):
-                    frameBuffer, rgbframeLength = self.getSequenceFromFrameBuffer(sequence - 2)
+                    frameBuffer, rgbframeLength = self.getSequenceFromFrameBuffer(sequence - seqBufferOffset)
                     self.showDisplay(display_size_x,display_size_y,frameBuffer,rgbframeLength)
                 lastSequence = sequence
 
