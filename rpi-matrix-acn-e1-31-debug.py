@@ -41,7 +41,7 @@ lastSequence = 0
 frameArray = [[0, 0, 0, [0]]]
 
 # Debug
-debugReceiver = 2
+debugReceiver = 0
 debugBuffer = 0
 debugDisplay = 0
 debugFrameArray = 0

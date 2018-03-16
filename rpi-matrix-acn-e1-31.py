@@ -24,9 +24,9 @@ parallel = 2
 # Art-Net Variabeln
 
 display_size_x = 64
-display_size_y = 32
-universum_start = 0
-universum_count = 13
+display_size_y = 64
+universum_start = 1
+universum_count = 25
 channel_per_univers = 510
 
 # FrameBuffer
@@ -56,11 +56,11 @@ def rgbmatrix_options():
   options.hardware_mapping = 'regular'
   options.inverse_colors = False
   options.led_rgb_sequence = "BGR"
-  options.gpio_slowdown = 1 
-  options.pwm_lsb_nanoseconds = 150
-  options.show_refresh_rate = 0 
+  options.gpio_slowdown = 4
+  options.pwm_lsb_nanoseconds = 130
+  options.show_refresh_rate = 0
   options.disable_hardware_pulsing = True
-  options.scan_mode = 0 
+  options.scan_mode = 1
   options.pwm_bits = 11
   options.daemon = 0
   options.drop_privileges = 0
@@ -70,12 +70,12 @@ options = rgbmatrix_options()
 display = RGBMatrix(options=options)
 
 
-class ArtNet(DatagramProtocol):
+class sACN_E1_31(DatagramProtocol):
 
 
     def addToFrameBufferArray(self, sequence, universe, rgb_length, data):
         global frameArray
-        if (sequence > 0):
+        if (sequence > -1):
 #           Die Sequence Nummer wird aus dem Array gelesen
             frameSequenceInt = int(float(str(frameArray [0][0])))
 #           Ist die Sequence Nummer 0, so wurde der Initial Array String erkannt
@@ -93,9 +93,9 @@ class ArtNet(DatagramProtocol):
         finalFrameArray = []
         rgbframeLength = 0
         #Sequence korrektur da es nur Sequenzen zwischen 1 und 255 geben darf
-        if (sequenceNr == -1 or sequenceNr == 0):
+        if (sequenceNr == -1 or sequenceNr == -2):
             sequenceNr = sequenceNr + 255
-        if (sequenceNr > 0):
+        if (sequenceNr > -1):
 # Sortieren des Array nach Sequence
 #            frameArray = sorted(frameArray, key=lambda x: x[1])
             frameArray = sorted(frameArray,key=itemgetter(1))
@@ -114,19 +114,13 @@ class ArtNet(DatagramProtocol):
 
     def datagramReceived(self, data, (host, port)):
         global lastSequence
-        if ((len(data) > 18) and (data[0:8] == "Art-Net\x00")):
+        if ((len(data) > 18) and (data[4:16] == "ASC-E1.17\x00\x00\x00")):
             rawbytes = map(ord, data)
-            opcode = rawbytes[8] + (rawbytes[9] << 8)
-            protocolVersion = (rawbytes[10] << 8) + rawbytes[11]
-            if ((opcode == 0x5000) and (protocolVersion >= 14)):
-                sequence = rawbytes[12]
-                physical = rawbytes[13]
-                sub_net = (rawbytes[14] & 0xF0) >> 4
-                universe = rawbytes[14] & 0x0F
-                net = rawbytes[15]
-                rgb_length = (rawbytes[16] << 8) + rawbytes[17]
-                (sequence, physical, sub_net, universe, net, rgb_length)
-                rgbdata = rawbytes[18:(rgb_length+18)]
+            if (len(data) > 18):
+                sequence = rawbytes[111]
+                universe = rawbytes[114]
+                rgb_length = (rawbytes[115] << 8) + rawbytes[116]
+                rgbdata = rawbytes[126:(rgb_length+126)]
                 self.addToFrameBufferArray(sequence,universe,rgb_length,rgbdata)
                 if(lastSequence != sequence):
                     frameBuffer, rgbframeLength = self.getSequenceFromFrameBuffer(sequence - seqBufferOffset)
@@ -151,5 +145,5 @@ class ArtNet(DatagramProtocol):
                  y += 1
 
 
-reactor.listenUDP(5568, ACN-E1-31())
+reactor.listenUDP(5568, sACN_E1_31())
 reactor.run()
