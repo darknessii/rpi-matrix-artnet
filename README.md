@@ -13,6 +13,11 @@ http://www.solderlab.de/index.php/software/glediator
 
 https://en.wikipedia.org/wiki/Art-Net
 
+# rpi-matrix-acn-e1-31
+Controlling up to 64x64 RGB LED Matrix Display with sACN E1.31 Protocol
+
+E1.31 is not proper implementet jet.
+
 ## Preliminary
 
 RGB LED displays rpi-rgb-led-matrix Program for Raspberry Pi must be installed and working on the Pi
@@ -43,7 +48,7 @@ sudo python rpi-matrix-artnet.py
 
 
 ## NOT working
-* Art-Net Net & Subnet
+* Art-Net (Net & Subnet Support) 
 * no Multicast Support
 
 ## TO DO
