@@ -14,9 +14,8 @@ http://www.solderlab.de/index.php/software/glediator
 https://en.wikipedia.org/wiki/Art-Net
 
 # rpi-matrix-acn-e1-31
-Controlling up to 64x64 RGB LED Matrix Display with sACN E1.31 Protocol
-
-E1.31 is not proper implementet jet.
+Controlling up to 64x64 and more RGB LED Matrix Display with sACN E1.31 Protocol
+have a look https://github.com/darknessii/rpi-matrix-acn-e1-31
 
 ## Preliminary
 
