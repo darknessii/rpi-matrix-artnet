@@ -47,11 +47,11 @@ sudo python rpi-matrix-artnet.py
 
 
 ## NOT working
-* Art-Net (Net & Subnet Support) 
+* Art-Net (Net Support) 
 * no Multicast Support
 
 ## TO DO
-* Code Clean Up
+* Buffer optimieren
 
 ## Jinx!
 
