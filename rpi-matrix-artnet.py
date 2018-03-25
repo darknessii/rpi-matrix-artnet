@@ -24,9 +24,9 @@ parallel = 2
 # Art-Net Variabeln
 
 display_size_x = 64
-display_size_y = 32
+display_size_y = 65
 universum_start = 0
-universum_count = 13
+universum_count = 26
 channel_per_univers = 510
 
 # FrameBuffer
@@ -35,7 +35,7 @@ frameBuffer = None
 frameBufferCounter = 0
 rgbframeLength = 0
 # Wie viele Sequencen sollen im Buffer gespeichert werden
-seqBufferSize = 6 # Min 4 Buffer
+seqBufferSize = 10 # Min 4 Buffer
 seqBufferOffset = 2
 lastSequence = 0
 
@@ -46,7 +46,7 @@ frameArray = [[0, 0, 0, [0]]]
 
 def rgbmatrix_options():
   options = RGBMatrixOptions()
-  options.multiplexing = 5
+  options.multiplexing = 6
   options.row_address_type = 0
   options.brightness = 80 
   options.rows = number_of_rows_per_panel
@@ -86,6 +86,15 @@ class ArtNet(DatagramProtocol):
             else:
                 frameArray.append([sequence, universe, rgb_length, data])
 
+    def cleanUpFrameBuffer(self, sequenceNr):
+        global frameArray
+        bufferCounter = 0
+        bufferSize = seqBufferSize * universum_count
+        while(bufferCounter < bufferSize):
+            if (bufferCounter < len(frameArray)):
+                if (sequenceNr >= int(float(str(frameArray [bufferCounter][0])))):
+                    frameArray.pop(bufferCounter)
+            bufferCounter += 1
 
 # Diese Funktion gibt eine gesamte Sequenz auch alle Universum in einem Array zusammengezogen
     def getSequenceFromFrameBuffer(self, sequenceNr):
@@ -99,15 +108,25 @@ class ArtNet(DatagramProtocol):
 # Sortieren des Array nach Sequence
 #            frameArray = sorted(frameArray, key=lambda x: x[1])
             frameArray = sorted(frameArray,key=itemgetter(1))
-            counter = 0
+            bufferCounter = 0
+# der Frame Counter zaehlt die Datenpakete (Universum Pakete) in einer Sequenc
+# ist ein Datenpaket verleren gegangen wird die gesamte Sequenz verworfen.
+            frameCounter = 0
             bufferSize = seqBufferSize * universum_count
-            while(counter < bufferSize):
-                if (counter < len(frameArray)):
-                    if (sequenceNr == int(float(str(frameArray [counter][0])))):
-                        finalFrameArray = finalFrameArray + frameArray [counter][3]
-                        rgbframeLength = rgbframeLength + int(float(str(frameArray [counter][2])))
-                        frameArray.pop(counter)
-                counter += 1
+            while(bufferCounter < bufferSize):
+                if (bufferCounter < len(frameArray)):
+                    if (sequenceNr == int(float(str(frameArray [bufferCounter][0])))):
+                        if (frameCounter == int(float(str(frameArray [bufferCounter][1])))):
+                            frameCounter += 1
+                        else:
+                            self.cleanUpFrameBuffer(sequenceNr)
+# Wenn daten im FrameBuffer fehlen, wird ein leerer Buffer zurueck gegeben
+                            finalFrameArray = []
+                            return (finalFrameArray, 0)
+                        finalFrameArray = finalFrameArray + frameArray [bufferCounter][3]
+                        rgbframeLength = rgbframeLength + int(float(str(frameArray [bufferCounter][2])))
+                        frameArray.pop(bufferCounter)
+                bufferCounter += 1
                 if (len(frameArray) > bufferSize):
                     frameArray = [[0, 0, 0, [0]]]
             return (finalFrameArray, rgbframeLength)
@@ -127,7 +146,9 @@ class ArtNet(DatagramProtocol):
                 rgb_length = (rawbytes[16] << 8) + rawbytes[17]
                 (sequence, physical, sub_net, universe, net, rgb_length)
                 rgbdata = rawbytes[18:(rgb_length+18)]
-                self.addToFrameBufferArray(sequence,universe,rgb_length,rgbdata)
+#                self.addToFrameBufferArray(sequence,universe,rgb_length,rgbdata)
+# Subnet and Universum in einer Variable somit sind 256 Universum moerglich
+                self.addToFrameBufferArray(sequence,rawbytes[14],rgb_length,rgbdata)
                 if(lastSequence != sequence):
                     frameBuffer, rgbframeLength = self.getSequenceFromFrameBuffer(sequence - seqBufferOffset)
                     self.showDisplay(display_size_x,display_size_y,frameBuffer,rgbframeLength)
